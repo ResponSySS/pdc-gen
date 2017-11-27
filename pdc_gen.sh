@@ -18,7 +18,7 @@ FNAME_NEW=""
 EXT_IN="pdc"
 # Extension of output files
 EXT_OUT="pdf"
-# Number of simultaneous jobs `xargs` execute (see `xargs --help`)
+# Number of simultaneous conversions (through `xargs -P${JOBS}`)
 JOBS=4
 # Pandoc additional arguments (--template, etc.)
 PANDOC_ARGS="--fail-if-warnings"
@@ -28,6 +28,7 @@ PANDOC_ARGS="--fail-if-warnings"
 #===============================================================================
 #
 # TODO: --no-interactive option to deactive xargs '-p' flag
+# TODO: implement FNAME_NEW functionality
 #
 # Set debug parameters
 [[ $DEBUG ]] && set -o nounset -o errexit -o pipefail
@@ -82,13 +83,13 @@ USAGE
 	where SEARCH_PATH is the path under which all files will be searched 
 
 OPTIONS
-    -i EXT_IN           specify extension of input files (default: "$EXT_IN")
-    -o EXT_OUT          specify extension of output files (default: "$EXT_OUT")
+    -i EXT_IN           set extension of input files (default: "$EXT_IN")
+    -o EXT_OUT          set extension of output files (default: "$EXT_OUT")
     -n FNAME            if set, change filenames of converted files to 
                         FNAME.EXT_OUT (default: "$FNAME_NEW")
-    -j JOBS             specify the number of simultaneous conversions 'xargs' 
-                        executes (default: $JOBS)
-    -a PANDOC_ARGS      specify additional arguments to 'pandoc'
+    -j JOBS             set the number of simultaneous conversions
+                        (default: $JOBS)
+    -a PANDOC_ARGS      set additional arguments to 'pandoc'
                         (default: "$PANDOC_ARGS")
 
 EXAMPLE

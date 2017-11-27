@@ -6,13 +6,13 @@ USAGE
 	where SEARCH_PATH is the path under which all files will be searched 
 
 OPTIONS
-    -i EXT_IN           specify extension of input files (default: "pdc")
-    -o EXT_OUT          specify extension of output files (default: "pdf")
+    -i EXT_IN           set extension of input files (default: "pdc")
+    -o EXT_OUT          set extension of output files (default: "pdf")
     -n FNAME            if set, change filenames of converted files to 
                         FNAME.EXT_OUT (default: "")
-    -j JOBS             specify the number of simultaneous conversions 'xargs' 
-                        executes (default: 4)
-    -a PANDOC_ARGS      specify additional arguments to 'pandoc'
+    -j JOBS             set the number of simultaneous conversions
+                        (default: 4)
+    -a PANDOC_ARGS      set additional arguments to 'pandoc'
                         (default: "--fail-if-warnings")
 
 EXAMPLE

@@ -86,8 +86,8 @@ OPTIONS
     -o EXT_OUT          specify extension of output files (default: "$EXT_OUT")
     -n FNAME            if set, change filenames of converted files to 
                         FNAME.EXT_OUT (default: "$FNAME_NEW")
-    -j JOBS             specify the number of simultaneous jobs 'xargs' executes
-                        (default: $JOBS)
+    -j JOBS             specify the number of simultaneous conversions 'xargs' 
+                        executes (default: $JOBS)
     -a PANDOC_ARGS      specify additional arguments to 'pandoc'
                         (default: "$PANDOC_ARGS")
 

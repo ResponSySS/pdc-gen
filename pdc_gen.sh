@@ -49,18 +49,18 @@ XARGS_FLAGS="-p"
 # Test if a file exists (dir or not)
 # path to file to test (string)
 fn_need_file() {
-	[ -e "$1" ] || fn_exit_err "need '$1' (file not found)" $ERR_NO_FILE
+	[[ -e "$1" ]] || fn_exit_err "need '$1' (file not found)" $ERR_NO_FILE
 }
 # Test if a dir exists
 # path to dir to test (string)
 fn_need_dir() {
-	[ -d "$1" ] || fn_exit_err "need '$1' (directory not found)" $ERR_NO_FILE
+	[[ -d "$1" ]] || fn_exit_err "need '$1' (directory not found)" $ERR_NO_FILE
 }
 # Test if a command exists
 # command (string)
 fn_need_cmd() {
 	command -v "$1" > /dev/null 2>&1
-	[ $? -eq 0 ] ||	fn_exit_err "need '$1' (command not found)" $ERR_NO_FILE
+	[[ $? -eq 0 ]] ||	fn_exit_err "need '$1' (command not found)" $ERR_NO_FILE
 }
 # message (string)
 m_say() {
@@ -76,7 +76,8 @@ fn_exit_err() {
 fn_show_help() {
     cat << EOF
 $SCRIPT_NAME 0.5
-    Recursively converts all *.EXT_IN files to *.EXT_OUT files using 'pandoc'.
+    Recursively convert files with 'pandoc' (ideal for automation).
+    Turn all matching *.EXT_IN files into *.EXT_OUT.
 
 USAGE
     $SCRIPT_NAME [OPTIONS] SEARCH_PATH
@@ -91,6 +92,12 @@ OPTIONS
                         (default: $JOBS)
     -a PANDOC_ARGS      set additional arguments to 'pandoc'
                         (default: "$PANDOC_ARGS")
+
+AUTOMATION WITH VARIABLES
+    To automate the behaviour of the script without having to specify the same 
+    arguments each time, edit the default global variables values under the 
+    VARIABLES section at the top of this script ($SCRIPT_NAME). Then, see 
+    '$SCRIPT_NAME --help' to make sure the default values are correct.
 
 EXAMPLE
     $ ./$SCRIPT_NAME . -j 4 -n index -i pdc -o html -a "--template ./tmpl.pandoc"
@@ -132,7 +139,7 @@ main() {
 	fn_need_cmd "uniq"
 
 	# PARSE ARGUMENTS
-	[ $# -eq 0 ] && {
+	[[ $# -eq 0 ]] && {
 		fn_show_help
 		exit
 	}

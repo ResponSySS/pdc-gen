@@ -1,5 +1,6 @@
 pdc_gen.sh 0.5
-    Recursively converts all *.EXT_IN files to *.EXT_OUT files using 'pandoc'.
+    Recursively convert files with 'pandoc' (ideal for automation).
+    Turn all matching *.EXT_IN files into *.EXT_OUT.
 
 USAGE
     pdc_gen.sh [OPTIONS] SEARCH_PATH
@@ -14,6 +15,12 @@ OPTIONS
                         (default: 4)
     -a PANDOC_ARGS      set additional arguments to 'pandoc'
                         (default: "--fail-if-warnings")
+
+AUTOMATION WITH VARIABLES
+    To automate the behaviour of the script without having to specify the same 
+    arguments each time, edit the default global variables values under the 
+    VARIABLES section at the top of this script (pdc_gen.sh). Then, see 
+    'pdc_gen.sh --help' to make sure the default values are correct.
 
 EXAMPLE
     $ ./pdc_gen.sh . -j 4 -n index -i pdc -o html -a "--template ./tmpl.pandoc"

@@ -127,7 +127,9 @@ EOF
 fn_gen_files() {
 	# whitespaces hopefully escaped with \"
 	# TODO: implement FNAME_NEW functionality
-	find $SEARCH_PATH -type f -name "*[.]${EXT_IN}" | sort | uniq | sed "s/[.]$EXT_IN$//" | xargs -I'{}' $XARGS_FLAGS pandoc $PANDOC_ARGS   \"{}.$EXT_IN\" -o \"{}.$EXT_OUT\"
+	find $SEARCH_PATH -type f -name "*[.]${EXT_IN}" | 
+		sort | uniq | sed "s/[.]$EXT_IN$//" | 
+		xargs -I'{}' $XARGS_FLAGS pandoc $PANDOC_ARGS   \"{}.$EXT_IN\" -o \"{}.$EXT_OUT\"
 }
 
 main() {

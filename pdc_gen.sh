@@ -2,7 +2,7 @@
 #===============================================================================
 #         USAGE: ./pdc_gen.sh --help
 # 
-#   DESCRIPTION: 
+#   DESCRIPTION: RTFM (--help)
 #  REQUIREMENTS: find, xargs, sed, pandoc
 #        AUTHOR: Sylvain S. (ResponSyS), mail@systemicresponse.com
 #       CREATED: 11/27/2017 16:07
@@ -12,11 +12,12 @@
 #===============================================================================
 # Root path for searching files
 SEARCH_PATH=
-# Name of new converted files (without the extension); if unset, new files will have the same filename
-FNAME_NEW=""
+# Name of new converted files (without the extension); if unset, new files will 
+# have the same filename
+FNAME_NEW=
 # Extension of input files
 EXT_IN="pdc"
-# Extension of output files
+# List of output files extensions
 EXT_OUT="pdf"
 # Number of simultaneous conversions (through `xargs -P${JOBS}`)
 JOBS=4
@@ -29,9 +30,12 @@ PANDOC_ARGS="--fail-if-warnings"
 #
 # TODO: --no-interactive option to deactive xargs '-p' flag
 # TODO: implement FNAME_NEW functionality
+# TODO: better doc commenting
+# TODO: check if a file was generated (emit warning is nothing was changed/done)
 #
 # Set debug parameters
-[[ $DEBUG ]] && set -o nounset -o errexit -o pipefail
+[[ $DEBUG ]] && set -o nounset
+set -o errexit -o pipefail
 
 SCRIPT_NAME="${0##*/}"
 VERSION=0.5
@@ -44,30 +48,31 @@ FMT_OFF='\e[0m'
 ERR_WRONG_ARG=2
 ERR_NO_FILE=127
 
-XARGS_FLAGS="-p"
+XARGS_FLAGS="--interactive"
+RET=
 
 # Test if a file exists (dir or not)
-# path to file to test (string)
+# $1: path to file (string)
 fn_need_file() {
 	[[ -e "$1" ]] || fn_exit_err "need '$1' (file not found)" $ERR_NO_FILE
 }
 # Test if a dir exists
-# path to dir to test (string)
+# $1: path to dir (string)
 fn_need_dir() {
 	[[ -d "$1" ]] || fn_exit_err "need '$1' (directory not found)" $ERR_NO_FILE
 }
 # Test if a command exists
-# command (string)
+# $1: command (string)
 fn_need_cmd() {
 	command -v "$1" > /dev/null 2>&1
-	[[ $? -eq 0 ]] ||	fn_exit_err "need '$1' (command not found)" $ERR_NO_FILE
+	[[ $? -eq 0 ]] || fn_exit_err "need '$1' (command not found)" $ERR_NO_FILE
 }
-# message (string)
+# $1: message (string)
 m_say() {
 	echo -e "$SCRIPT_NAME: $1"
 }
 # Exit with message and provided error code
-# error message (string), return code (int)
+# $1: error message (string), $2: return code (int)
 fn_exit_err() {
 	m_say "${FMT_BOLD}ERROR${FMT_OFF}: $1" >&2
 	exit $2
@@ -77,7 +82,7 @@ fn_show_help() {
     cat << EOF
 $SCRIPT_NAME 0.5
     Recursively convert files with 'pandoc' (ideal for automation).
-    Turn all matching *.EXT_IN files into *.EXT_OUT.
+    Turn all matching **.EXT_IN files into **.EXT_OUT.
 
 USAGE
     $SCRIPT_NAME [OPTIONS] SEARCH_PATH
@@ -85,24 +90,26 @@ USAGE
 
 OPTIONS
     -i EXT_IN           set extension of input files (default: "$EXT_IN")
-    -o EXT_OUT          set extension of output files (default: "$EXT_OUT")
+    -o EXT_OUT          set extension(s) of output files; EXT_OUT is a 
+                         ':'-separated list of extensions (default: "$EXT_OUT")
     -n FNAME            if set, change filenames of converted files to 
-                        FNAME.EXT_OUT (default: "$FNAME_NEW")
+                         FNAME.EXT_OUT (default: "$FNAME_NEW")
     -j JOBS             set the number of simultaneous conversions
-                        (default: $JOBS)
-    -a PANDOC_ARGS      set additional arguments to 'pandoc'
-                        (default: "$PANDOC_ARGS")
+                         (default: $JOBS)
+    -a PANDOC_ARGS      set additional arguments to 'pandoc' invocation
+                         (default: "$PANDOC_ARGS")
 
 AUTOMATION WITH VARIABLES
     To automate the behaviour of the script without having to specify the same 
-    arguments each time, edit the default global variables values under the 
-    VARIABLES section at the top of this script ($SCRIPT_NAME). Then, see 
-    '$SCRIPT_NAME --help' to make sure the default values are correct.
+     arguments each time, edit the default global variables values under the 
+     VARIABLES section at the top of this script ($SCRIPT_NAME). Then, see 
+     '$SCRIPT_NAME --help' to make sure the default values are correct.
 
 EXAMPLE
-    $ ./$SCRIPT_NAME . -j 4 -n index -i pdc -o html -a "--template ./tmpl.pandoc"
-	Convert all files ending with ".pdc" found under ./ to "index.html"
-        files in their current directory with the pandoc template "./tmpl.pandoc"
+    $ ./$SCRIPT_NAME . -j 4 -n index -i pdc -o "html:pdf" -a "--template ./tmpl.pandoc"
+	Convert all files ending with ".pdc" found under ./ to (1) "index.html" 
+         and (2) "index.pdf" files in their respective directory with the pandoc
+         template "./tmpl.pandoc"
 
 AUTHOR
     Written by Sylvain Saubier (<http://SystemicResponse.com>)
@@ -124,21 +131,36 @@ PANDOC_ARGS    $PANDOC_ARGS
 EOF
 }
 
+# Ensure recent enough 'pandoc' version
+# TODO: better version check
+fn_check_pandoc_ver() {
+	pandoc --version | grep "pandoc 2[.]" > /dev/null || fn_exit_err "need pandoc version 2" $ERR_WRONG_ARG
+}
+
+# return: result of 'find' invocation (string)
+fn_find_files() {
+	RET="$(find $SEARCH_PATH -type f -name "*[.]${EXT_IN}")"
+}
+
+# $1: list of files to convert, '\n'-separated (string)
 fn_gen_files() {
-	# whitespaces hopefully escaped with \"
-	# TODO: implement FNAME_NEW functionality
-	find $SEARCH_PATH -type f -name "*[.]${EXT_IN}" | 
-		sort | uniq | sed "s/[.]$EXT_IN$//" | 
-		xargs -I'{}' $XARGS_FLAGS pandoc $PANDOC_ARGS   \"{}.$EXT_IN\" -o \"{}.$EXT_OUT\"
+	# xargs can handle whitespaces in filenames (god knows how but it does)
+	IFS=':'
+	for EXT in $EXT_OUT; do
+		echo "$1" | sort | uniq | sed "s/[.]$EXT_IN$//" | 
+			xargs -I'{}' $XARGS_FLAGS pandoc $PANDOC_ARGS --resource-path={}  {}.$EXT_IN -o {}.$EXT
+	done
 }
 
 main() {
 	fn_need_cmd "pandoc"
+	fn_check_pandoc_ver
 	fn_need_cmd "sed"
 	fn_need_cmd "find"
 	fn_need_cmd "xargs"
 	fn_need_cmd "sort"
 	fn_need_cmd "uniq"
+	fn_need_cmd "grep"
 
 	# PARSE ARGUMENTS
 	[[ $# -eq 0 ]] && {
@@ -189,13 +211,16 @@ main() {
 		fn_need_file "$FILE"
 	done
 
-	[[ "$DEBUG" ]] && fn_print_params
-
 	[[ "$EXT_IN" ]]  || fn_exit_err "EXT_IN not set" $ERR_WRONG_ARG
 	[[ "$EXT_OUT" ]] || fn_exit_err "EXT_OUT not set" $ERR_WRONG_ARG
 
-	m_say "generating..."
-	fn_gen_files
+	[[ "$DEBUG" ]] && fn_print_params
+
+	m_say "searching for files to convert..."
+	fn_find_files
+	[[ -n "$RET" ]] || fn_exit_err "no file was found matching your criterias" $ERR_NO_FILE
+	m_say "converting..."
+	fn_gen_files "$RET"
 	m_say "done!"
 }
 

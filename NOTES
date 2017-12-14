@@ -1,0 +1,12 @@
+TODO
+	Is there a problem when generating files with embedded images? can pandoc find relative images even if  it executes from another dir than the dir containing the markdown/pandoc file?
+		$ find textes/
+		textes/
+		textes/txt.pdc
+		textes/img.jpg
+		$ pandoc textes/txt.pdc -o textes/txt.pdf
+		[FAILS]
+
+		SOLUTION: uses the -execdir option of find and pipe resulting string to 'xargs --interactive -j4'
+			LIST=$(find path/ -name [...])  # list files
+			echo "$LIST" | sort | uniq | awk '{print "cd $(dirname $1) && pandoc ...}	# sort it

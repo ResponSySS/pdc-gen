@@ -7,6 +7,11 @@ TODO
 		$ pandoc textes/txt.pdc -o textes/txt.pdf
 		[FAILS]
 
-		SOLUTION: uses the -execdir option of find and pipe resulting string to 'xargs --interactive -j4'
-			LIST=$(find path/ -name [...])  # list files
-			echo "$LIST" | sort | uniq | awk '{print "cd $(dirname $1) && pandoc ...}	# sort it
+		SOLUTION: uses the -okdir option of find and pipe resulting string to 'xargs --interactive -j4'
+			LIST=$(find path/ -name [...] -okdir pandoc {} -o {}.pdf
+		SOLUTION:
+			find Tests/ -name "*[.]md" -printf "--resource-path=%h --fail-if-warnings %p -o %p.pdf\n" | sed s/[.]md[.]pdf$/.pdf/ > /tmp/list
+			cat /tmp/list | xargs -p -I{} -P4 pandoc {}
+find Tests/ -name "*[.]md" -fprintf /tmp/list '%p --resource-path=%h --fail-if-warnings -o %p.pdf   '
+# count number of arguments per line
+cat /tmp/list | xargs -p -n5 -P3 pandoc

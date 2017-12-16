@@ -28,10 +28,11 @@ PANDOC_ARGS="--fail-if-warnings"
 # SCRIPT
 #===============================================================================
 #
+# TODO: avoid bash aliases by executing `which find` instead of `find` etc.
 # TODO: --no-interactive option to deactive xargs '-p' flag
 # TODO: implement FNAME_NEW functionality
 # TODO: better doc commenting
-# TODO: check if a file was generated (emit warning is nothing was changed/done)
+# TODO: improve verbose on dry-run
 #
 # Set debug parameters
 [[ $DEBUG ]] && set -o nounset
@@ -48,7 +49,13 @@ FMT_OFF='\e[0m'
 ERR_WRONG_ARG=2
 ERR_NO_FILE=127
 
-XARGS_FLAGS="--interactive"
+# TODO: turn the variable mess into one array (XARGS_FLAGS)
+XARGS_FLAGS=
+XARGS_JOBS="-P${JOBS}"
+XARGS_PROMPT=
+# Number of arguments for pandoc invocation via xargs
+XARGS_CMD_COUNT=
+DRY_RUN=
 RET=
 
 # Test if a file exists (dir or not)
@@ -83,11 +90,9 @@ fn_show_help() {
 $SCRIPT_NAME 0.5
     Recursively convert files with 'pandoc' (ideal for automation).
     Turn all matching **.EXT_IN files into **.EXT_OUT.
-
 USAGE
     $SCRIPT_NAME [OPTIONS] SEARCH_PATH
 	where SEARCH_PATH is the path under which all files will be searched 
-
 OPTIONS
     -i EXT_IN           set extension of input files (default: "$EXT_IN")
     -o EXT_OUT          set extension(s) of output files; EXT_OUT is a 
@@ -96,24 +101,22 @@ OPTIONS
                          FNAME.EXT_OUT (default: "$FNAME_NEW")
     -j JOBS             set the number of simultaneous conversions
                          (default: $JOBS)
+    -p, --interactive   prompt the user about whether to run each command line
+    --dry-run           output command lines without executing them
     -a PANDOC_ARGS      set additional arguments to 'pandoc' invocation
                          (default: "$PANDOC_ARGS")
-
 AUTOMATION WITH VARIABLES
     To automate the behaviour of the script without having to specify the same 
      arguments each time, edit the default global variables values under the 
      VARIABLES section at the top of this script ($SCRIPT_NAME). Then, see 
      '$SCRIPT_NAME --help' to make sure the default values are correct.
-
 EXAMPLE
     $ ./$SCRIPT_NAME . -j 4 -n index -i pdc -o "html:pdf" -a "--template ./tmpl.pandoc"
 	Convert all files ending with ".pdc" found under ./ to (1) "index.html" 
          and (2) "index.pdf" files in their respective directory with the pandoc
          template "./tmpl.pandoc"
-
 AUTHOR
     Written by Sylvain Saubier (<http://SystemicResponse.com>)
-
 REPORTING BUGS
     Mail at: <feedback@systemicresponse.com>
 EOF
@@ -131,6 +134,16 @@ PANDOC_ARGS    $PANDOC_ARGS
 EOF
 }
 
+# Count number of arguments for pandoc invocation via xargs
+fn_count_args() {
+	XARGS_CMD_COUNT=0
+	local PANDOC_ARGS_MODEL="$PANDOC_ARGS --resource-path=PATH IN -o OUT"
+	for arg in $PANDOC_ARGS_MODEL; do
+		# (( XARGS_CMD_COUNT++ )) returns 1 when XCC==0, which causes script to exit on `set -o errexit`
+		(( ++XARGS_CMD_COUNT ))
+	done
+	[[ $DEBUG ]] && echo "Number of pandoc arguments for xargs: $XARGS_CMD_COUNT"
+}
 # Ensure recent enough 'pandoc' version
 # TODO: better version check
 fn_check_pandoc_ver() {
@@ -139,16 +152,22 @@ fn_check_pandoc_ver() {
 
 # return: result of 'find' invocation (string)
 fn_find_files() {
-	RET="$(find $SEARCH_PATH -type f -name "*[.]${EXT_IN}")"
+	# Defaults to FNAME_NEW if set
+	local FNAME_OUT="${FNAME_NEW:-%p}"
+	# <EXTOUT> is placeholder for extension of output files
+	RET="$(find $SEARCH_PATH -type f -name \*[.]${EXT_IN} -printf "$PANDOC_ARGS --resource-path='%h' '%p' -o '$FNAME_OUT.<EXTOUT>'\n")"
+	[[ $DEBUG ]] && echo -e "FIND list:\n$RET"
 }
 
 # $1: list of files to convert, '\n'-separated (string)
 fn_gen_files() {
 	# xargs can handle whitespaces in filenames (god knows how but it does)
+	local CMD="pandoc"
+	[[ $DRY_RUN ]] && XARGS_PROMPT= && CMD=(echo pandoc)
 	IFS=':'
 	for EXT in $EXT_OUT; do
-		echo "$1" | sort | uniq | sed "s/[.]$EXT_IN$//" | 
-			xargs -I'{}' $XARGS_FLAGS pandoc $PANDOC_ARGS --resource-path={}  {}.$EXT_IN -o {}.$EXT
+		echo "$1" | sort | uniq | sed "s/[.]$EXT_IN[.]<EXTOUT>/.$EXT/" | 
+			xargs -n${XARGS_CMD_COUNT} -r $XARGS_FLAGS $XARGS_JOBS $XARGS_PROMPT ${CMD[@]}
 	done
 }
 
@@ -187,7 +206,13 @@ main() {
 			"-j")
 				[[ $2 ]] || fn_exit_err "missing argument to '-j'" $ERR_WRONG_ARG
 				shift
-				XARGS_FLAGS="$XARGS_FLAGS -P${1}"
+				XARGS_JOBS="-P${1}"
+				;;
+			"--interactive"|"-p")
+				XARGS_PROMPT=$1
+				;;
+			"--dry-run")
+				DRY_RUN=1
 				;;
 			"-a")
 				[[ $2 ]] || fn_exit_err "missing argument to '-a'" $ERR_WRONG_ARG
@@ -218,8 +243,9 @@ main() {
 
 	m_say "searching for files to convert..."
 	fn_find_files
-	[[ -n "$RET" ]] || fn_exit_err "no file was found matching your criterias" $ERR_NO_FILE
+	[[ -z "$RET" ]] && fn_exit_err "no file was found matching your criterias" $ERR_NO_FILE
 	m_say "converting..."
+	fn_count_args
 	fn_gen_files "$RET"
 	m_say "done!"
 }

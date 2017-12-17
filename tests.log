@@ -1,0 +1,12 @@
+[./run_tests.sh]: tests/epub_pdf.sh: ./pdc_gen.sh -a --fail-if-warnings -i md -o epub:pdf
+[./run_tests.sh]: tests/epub_pdf.sh: returned 123 (SUCCESS)
+[./run_tests.sh]: tests/epub_pdf_dryrun.sh: ./pdc_gen.sh -a --fail-if-warnings -i md -o epub:pdf      --dry-run
+[./run_tests.sh]: tests/epub_pdf_dryrun.sh: returned 0 (SUCCESS)
+[./run_tests.sh]: tests/html_index_dryrun.sh: ./pdc_gen.sh -a --fail-if-warnings -i md -n index -o html --dry-run
+[./run_tests.sh]: tests/html_index_dryrun.sh: returned 0 (SUCCESS)
+[./run_tests.sh]: tests/html_index.sh: ./pdc_gen.sh -a --fail-if-warnings -i md -n index -o html
+[./run_tests.sh]: tests/html_index.sh: returned 0 (SUCCESS)
+[./run_tests.sh]: tests/odt_j2_prompt.sh: ./pdc_gen.sh -a --fail-if-warnings -i md -j 2 -o odt -p
+[./run_tests.sh]: tests/odt_j2_prompt.sh: returned 0 (SUCCESS)
+[./run_tests.sh]: tests/html_index_prompt.sh: ./pdc_gen.sh -a --fail-if-warnings -n index -o html -p
+[./run_tests.sh]: tests/html_index_prompt.sh: returned 127 (SUCCESS)

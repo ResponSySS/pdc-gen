@@ -1,34 +1,31 @@
-pdc_gen.sh 0.5
-    Recursively convert files with 'pandoc' (ideal for automation).
-    Turn all matching *.EXT_IN files into *.EXT_OUT.
-
+pdc_gen.sh 0.9
+    Recursively convert files with pandoc (ideal for automation).
+    Turn all matching **.EXT_IN files into **.EXT_OUT.
 USAGE
-    pdc_gen.sh [OPTIONS] SEARCH_PATH
-	where SEARCH_PATH is the path under which all files will be searched 
-
+    pdc_gen.sh [OPTIONS] [SEARCH_PATH]
+	where SEARCH_PATH is the path under which files will be searched
+         (default: "./")
 OPTIONS
     -i EXT_IN           set extension of input files (default: "pdc")
-    -o EXT_OUT          set extension of output files (default: "pdf")
+    -o EXT_OUT          set extension(s) of output files; EXT_OUT is a 
+                         ':'-separated list of extensions
     -n FNAME            if set, change filenames of converted files to 
-                        FNAME.EXT_OUT (default: "")
-    -j JOBS             set the number of simultaneous conversions
-                        (default: 4)
-    -a PANDOC_ARGS      set additional arguments to 'pandoc'
-                        (default: "--fail-if-warnings")
-
-AUTOMATION WITH VARIABLES
-    To automate the behaviour of the script without having to specify the same 
-    arguments each time, edit the default global variables values under the 
-    VARIABLES section at the top of this script (pdc_gen.sh). Then, see 
-    'pdc_gen.sh --help' to make sure the default values are correct.
-
+                         FNAME.EXT_OUT
+    -j JOBS             set the number of simultaneous parallel conversions
+			 (default: 4) (NOTE: see PARALLEL PROCESSING)
+    -p, --interactive   prompt the user about whether to run each command line
+    --dry-run           output command lines without executing them
+    -a PANDOC_ARGS      set additional arguments to 'pandoc' invocation
+                         (default: "--fail-if-warnings")
+PARALLEL PROCESSING
+    The '-n' flag allows for parallel processing of potentially shared resources.
+     Be sure to not output to the same file otherwise result are likely to be 
+     mixed up (though pandoc seems to handle it well).
 EXAMPLE
-    $ ./pdc_gen.sh . -j 4 -n index -i pdc -o html -a "--template ./tmpl.pandoc"
-	Convert all files ending with ".pdc" found under ./ to "index.html"
-        files in their current directory with the pandoc template "./tmpl.pandoc"
-
+    $ ./pdc_gen.sh . -j 4 -n index -i pdc -o html:pdf:epub -a "--template ./tmpl.pandoc"
+	Convert all files ending with ".pdc" found under ./ to (1) "index.html",
+         (2) "index.pdf" and (3) "index.epub" files in their respective directory
+         with the pandoc template "./tmpl.pandoc"
 AUTHOR
     Written by Sylvain Saubier (<http://SystemicResponse.com>)
-
-REPORTING BUGS
-    Mail at: <feedback@systemicresponse.com>
+    Report bugs at: <feedback@systemicresponse.com>

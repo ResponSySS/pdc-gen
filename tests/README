@@ -6,5 +6,5 @@ These tests follow a specific 2-line format:
 2 		Expected return value in prepended with "#RET=" (e.g. #RET=127)
 
 Example:
-	./pdc_gen.sh -i md -p -j 10 -o html -n "new name"
+	./pdc-gen.sh -i md -p -j 10 -o html -n "new name"
 	#RET=0

@@ -1,6 +1,6 @@
 #!/bin/bash - 
 #===============================================================================
-#         USAGE: ./pdc_gen.sh --help
+#         USAGE: ./pdc-gen.sh --help
 # 
 #   DESCRIPTION: RTFM (--help)
 #  REQUIREMENTS: find, xargs, sed, pandoc
@@ -8,6 +8,7 @@
 #       CREATED: 11/27/2017 16:07
 #===============================================================================
 ################################################################################
+# TODO: rename it to "pdc-rgen.sh"?
 # TODO: avoid bash aliases by executing `which find` instead of `find` etc.
 ################################################################################
 
@@ -55,7 +56,7 @@ DRY_RUN=
 # Test if a file exists (dir or not)
 # $1: path to file (string)
 fn_need_file() {
-	[[ -e "$1" ]] || fn_exit_err "need '$1' (file not found)" $ERR_NO_FILE
+	[[ -e "$1" ]] || fn_exit_err "need '$1' (file or directory not found)" $ERR_NO_FILE
 }
 # Test if a dir exists
 # $1: path to dir (string)

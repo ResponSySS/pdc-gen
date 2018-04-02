@@ -3,7 +3,7 @@ pdc-gen.sh 0.9
     Turn all matching **.EXT_IN files into **.EXT_OUT.
 USAGE
     pdc-gen.sh [OPTIONS] [SEARCH_PATH]
-	where SEARCH_PATH is the path under which files will be searched
+    where SEARCH_PATH is the path under which files will be searched
          (default: "./")
 OPTIONS
     -i EXT_IN           set extension of input files (default: "pdc")
@@ -12,7 +12,7 @@ OPTIONS
     -n FNAME            if set, change filenames of converted files to 
                          FNAME.EXT_OUT
     -j JOBS             set the number of simultaneous parallel conversions
-			 (default: 4) (NOTE: see PARALLEL PROCESSING)
+                         (default: 4) (NOTE: see PARALLEL PROCESSING)
     -p, --interactive   prompt the user about whether to run each command line
     --dry-run           output command lines without executing them
     -a PANDOC_ARGS      set additional arguments to 'pandoc' invocation
@@ -23,11 +23,11 @@ PARALLEL PROCESSING
      mixed up (though pandoc seems to handle it well).
 EXAMPLE
     $ ./pdc-gen.sh . -j 4 -n index -i pdc -o html:pdf:epub -a "--template ./tmpl.pandoc"
-	Convert all files ending with ".pdc" found under ./ to (1) "index.html",
+    Convert all files ending with ".pdc" found under ./ to (1) "index.html",
          (2) "index.pdf" and (3) "index.epub" files in their respective directory
          with the pandoc template "./tmpl.pandoc"
 AUTHOR
     Written by Sylvain Saubier (<http://SystemicResponse.com>)
-    Report bugs at: <feedback@systemicresponse.com>
+    Report bugs at: <feedback@sylsau.com>
 
 // vim: ts=4:sw=4:expandtab

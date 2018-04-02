@@ -4,11 +4,10 @@
 # 
 #   DESCRIPTION: RTFM (--help)
 #  REQUIREMENTS: find, xargs, sed, pandoc
-#        AUTHOR: Sylvain S. (ResponSyS), mail@systemicresponse.com
+#        AUTHOR: Sylvain S. (ResponSyS), mail@sylsau.com
 #       CREATED: 11/27/2017 16:07
 #===============================================================================
 ################################################################################
-# TODO: rename it to "pdc-rgen.sh"?
 # TODO: avoid bash aliases by executing `which find` instead of `find` etc.
 ################################################################################
 
@@ -56,7 +55,7 @@ DRY_RUN=
 # Test if a file exists (dir or not)
 # $1: path to file (string)
 fn_need_file() {
-	[[ -e "$1" ]] || fn_exit_err "need '$1' (file or directory not found)" $ERR_NO_FILE
+	[[ -e "$1" ]] || fn_exit_err "need '$1' (file not found)" $ERR_NO_FILE
 }
 # Test if a dir exists
 # $1: path to dir (string)
@@ -71,7 +70,8 @@ fn_need_cmd() {
 }
 # $1: message (string)
 m_say() {
-	echo -e "$SCRIPT_NAME: $1"
+	#echo -e "$SCRIPT_NAME: $1"
+	echo -e "$1"
 }
 # $1: debug message (string)
 m_say_debug() {
@@ -116,7 +116,7 @@ EXAMPLE
          with the pandoc template "./tmpl.pandoc"
 AUTHOR
     Written by Sylvain Saubier (<http://SystemicResponse.com>)
-    Report bugs at: <feedback@systemicresponse.com>
+    Report bugs at: <feedback@sylsau.com>
 EOF
 }
 
@@ -161,12 +161,12 @@ fn_find_files() {
 fn_gen_files() {
 	local IFS_OLD=$IFS
 	local CMD="pandoc"
-	# Be verbose by default, but not on dry-run
 	local XARGS_VERBOSE="-t"
 	IFS=':'
 	# On dry-run, just echo the command-lines without prompting
 	[[ $DRY_RUN ]] && { XARGS_PROMPT= ; CMD=(echo $CMD); XARGS_VERBOSE= ; }
 	for EXT in $EXT_OUT; do
+		echo -en "\t"
 		echo "$1" | sort | uniq | sed "s/[.]$EXT_IN[.]<EXTOUT>/.$EXT/" | 
 			xargs ${XARGS_FLAGS[@]} $XARGS_VERBOSE $XARGS_JOBS $XARGS_PROMPT ${CMD[@]}
 	done
@@ -239,16 +239,16 @@ main() {
 	[[ $EXT_OUT ]] || fn_exit_err "extension(s) for output files (EXT_OUT) not set" 	$ERR_WRONG_ARG
 
 	[[ $DEBUG ]] && { m_say_debug "Parameters:"; fn_print_params; }
-	[[ $DRY_RUN ]] && m_say "this is a dry-run; no file will be written!"
+	[[ $DRY_RUN ]] && m_say "This is a dry-run; no file will be written!"
 
-	m_say "searching for files to convert in \"${SEARCH_PATH:-./}\"..."
+	m_say "Searching for files to convert in \"${SEARCH_PATH:-./}\"..."
 	fn_find_files
 	[[ -n "$RET" ]] || fn_exit_err "no file was found matching your criterias (**.$EXT_IN -> **.{$EXT_OUT} under ${SEARCH_PATH:-./})" $ERR_NO_FILE
 	[[ $DEBUG ]] && m_say_debug "FIND list:\n$RET"
-	m_say "converting..."
+	m_say "Converting..."
 	#fn_count_args
 	fn_gen_files "$RET"
-	m_say "done!"
+	m_say "Done!"
 }
 
 main "$@"
